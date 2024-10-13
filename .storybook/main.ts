@@ -8,14 +8,23 @@ const config: StorybookConfig = {
     "@storybook/addon-essentials",
     "@chromatic-com/storybook",
     "@storybook/addon-interactions",
-    '@chakra-ui/storybook-addon',
+    "@bbbtech/storybook-formik/register",
   ],
   framework: {
     name: "@storybook/nextjs",
-    options: {},
+    options: {
+    },
   },
-  features: {
-    emotionAlias: false,
+  features: { emotionAlias: false },
+  webpackFinal: async (config) => {
+    config.module.rules.push({
+      test: /\.mjs$/,
+      include: /node_modules/,
+      type: 'javascript/auto',
+    })
+
+    return config
   },
+  staticDirs: ["..\\public"],
 };
 export default config;

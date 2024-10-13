@@ -1,5 +1,4 @@
 import type { Preview } from "@storybook/react";
-//const theme = require('../path/to/your/theme')
 
 const preview: Preview = {
   parameters: {
@@ -9,9 +8,6 @@ const preview: Preview = {
         date: /Date$/i,
       },
     },
-    // chakra: {
-    //   theme,
-    // },  
   },
 };
 
