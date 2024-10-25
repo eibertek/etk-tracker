@@ -1,16 +1,19 @@
 import { Box, Flex } from '@chakra-ui/core';
 import { useEffect, useState } from 'react';
 import { Textarea } from '@chakra-ui/react';
-import { PauseIcon, PlayButton, StopIcon } from './icons';
+import { PauseIcon, PlayButton, StopIcon, FinishIcon } from './icons';
 import { format } from 'date-fns';
 
 interface IPommodoroTimerProps {
     taskName: string;
-    startTime: number;
-    backwards: boolean;
+    startTime?: number;
+    backwards?: boolean;
+    onStop?: ()=>void;
+    onFinish: (registry:any)=>void;
+    register?: boolean;
 };
 
-interface IRegistry {
+export interface IRegistry {
   date: Date;
   description: String;
   time: number;
@@ -20,9 +23,10 @@ const IDLE = "idle";
 const PLAYING = "playing";
 const PAUSE = "pause";
 const STOP = "stop";
+const FINISH = "finish";
 
 
-const PommodoroTimer = ({ taskName, startTime=0, backwards }: IPommodoroTimerProps) => {
+const PommodoroTimer = ({ taskName, startTime=0, backwards, onStop, register=true, onFinish }: IPommodoroTimerProps) => {
     const [ registry, setRegistry ] = useState([] as IRegistry[]);
     const [ time, setTime ] = useState(0);
     const [ description, setDescription ] = useState("");
@@ -35,11 +39,9 @@ const PommodoroTimer = ({ taskName, startTime=0, backwards }: IPommodoroTimerPro
 
     useEffect(()=>{
       if(backwards && startTime - time===0) {
-        setStatus(IDLE);        
-        clearInterval(intervalId);
-        setDescription("");
-        setTime(0);
-        setRegistry([...registry, { date: new Date(), time, description}]);
+        const buzzAudio = document.getElementById('buzz') as HTMLAudioElement;
+        buzzAudio && buzzAudio.play();
+        setStatus(STOP);        
       };      
     }, [time]);
 
@@ -80,10 +82,14 @@ const PommodoroTimer = ({ taskName, startTime=0, backwards }: IPommodoroTimerPro
         if(status === STOP) {
             clearInterval(intervalId);            
             setTime(0);
-            setRegistry([...registry, { date: new Date(), time, description}]);
-            setDescription("");            
+            register && setRegistry([...registry, { date: new Date(), time, description}]);
+            setDescription("");
+            onStop && onStop();            
         }
 
+        if(status === FINISH) {
+            onFinish && onFinish(registry);
+        }
         return () => {
             document.removeEventListener("keypress", (evt) => onKeyDown(evt, status));
             clearInterval(intervalId);
@@ -102,6 +108,7 @@ const PommodoroTimer = ({ taskName, startTime=0, backwards }: IPommodoroTimerPro
 
     return (
         <Flex direction={'column'} gridColumn={"Flex"} alignItems={"center"} gap={3} flexShrink={0}>
+            <audio id='buzz' src="/buzzing.mp3"></audio>
             <Box h={10}>Task {taskName}</Box>
             <Box h={10}>Lapse: {printTime(time)}</Box>
             <Flex direction={'row'}>
@@ -112,12 +119,13 @@ const PommodoroTimer = ({ taskName, startTime=0, backwards }: IPommodoroTimerPro
                     <PauseIcon width={"100px"} height={"100px"} />
                 </Box>}
                 <Box p={3} onClick={()=>setStatus(STOP)}><StopIcon width={"100px"} height={"100px"} /></Box>
+                <Box p={3} onClick={()=>setStatus(FINISH)}>{status !== PLAYING && <FinishIcon width={"100px"} height={"100px"} />}</Box>
             </Flex>
             <Box h={10}>Notes:</Box>
             <Box h={10} w={"100%"}>
                 <Textarea width="100%" style={ {color:"#000", padding:"0.25rem"} } placeholder='Please fill here with the description needed' value={description} onChange={(evt)=>setDescription(evt.target.value)}/>
             </Box>
-            <Box mt={3} maxH={"300px"} overflowY={'scroll'}>
+            <Box mt={5} maxH={"300px"} overflowY={'scroll'}>
               {registry.map((reg, index)=>
                 <Box key={`registry_${index}`}>{format(reg.date, "MM/dd/yyyy HH:mm:ss")} - {reg.time} -  {reg.description ? reg.description : "No description"}</Box>
               )}

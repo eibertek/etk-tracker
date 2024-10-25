@@ -1,5 +1,5 @@
 "use client";
-import PommodoroTimer from "@/components/pommodoroTimer";
+import { TaskComponent } from "@/components/Task";
 import Image from "next/image";
 
 export default function Home() {
@@ -14,7 +14,7 @@ export default function Home() {
           height={38}
           priority
         />
-        <PommodoroTimer backwards={true} taskName="First Task" startTime={1500} />
+        <TaskComponent taskName="First Task" />
       </main>
       <footer className="row-start-3 flex gap-6 flex-wrap items-center justify-center">
         <a
